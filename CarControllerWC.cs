@@ -19,20 +19,24 @@ public class AxleInfo
 public class CarControllerWC : MonoBehaviour
 {
     public List<AxleInfo> axleInfos;
-    public float maxTorque;
-    public float maxSteeringAngle;
 
     Vector3 position;
     Quaternion rotation;
-
-    public GameObject brakes;
-    public GameObject smoke;
-    public GameObject reverseLight;
-
     Vector3 com;
     Rigidbody rb;
 
+    [Header("Steering Settings")]
+    public float maxSteeringAngle;
+    public float steeringSensitivity;
+
+    [Header("VFX and SFX")]
+    public GameObject brakes;
+    public GameObject smoke;
+    public GameObject reverseLight;
     public AudioSource engine;
+
+    [Header("Engine Settings")]
+    public float maxTorque;
     public float gearRatio = 30;
     public float maxRpm = 3000;
     public float idle = 400;
@@ -66,7 +70,7 @@ public class CarControllerWC : MonoBehaviour
 
         float gamepadControl = maxTorque * Gamepad.current.rightTrigger.ReadValue();
 
-        float steering = maxSteeringAngle * Input.GetAxis("Horizontal");
+        float steering = maxSteeringAngle * Input.GetAxis("Horizontal") * steeringSensitivity;
 
         engine.pitch = Mathf.Clamp(rb.velocity.sqrMagnitude, idle, maxRpm) * Time.deltaTime / gearRatio;
 
