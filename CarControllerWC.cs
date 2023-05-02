@@ -27,7 +27,6 @@ public class CarControllerWC : MonoBehaviour
 
     [Header("Steering Settings")]
     public float maxSteeringAngle;
-    public float steeringSensitivity;
 
     [Header("VFX and SFX")]
     public GameObject brakes;
@@ -68,9 +67,7 @@ public class CarControllerWC : MonoBehaviour
     {
         float forward = maxTorque * Keyboard.current.upArrowKey.ReadValue();
 
-        float gamepadControl = maxTorque * Gamepad.current.rightTrigger.ReadValue();
-
-        float steering = maxSteeringAngle * Input.GetAxis("Horizontal") * steeringSensitivity;
+        float steering = maxSteeringAngle * Input.GetAxis("Horizontal");
 
         engine.pitch = Mathf.Clamp(rb.velocity.sqrMagnitude, idle, maxRpm) * Time.deltaTime / gearRatio;
 
@@ -90,19 +87,6 @@ public class CarControllerWC : MonoBehaviour
                 brakes.SetActive(false);
             }
 
-            if (Gamepad.current != null && Gamepad.current.leftTrigger.IsPressed(1))
-            {
-                axleInfo.leftWheel.brakeTorque = 3000;
-                axleInfo.rightWheel.brakeTorque = 3000;
-                brakes.SetActive(true);
-            }
-            else
-            {
-                axleInfo.leftWheel.brakeTorque = 0;
-                axleInfo.rightWheel.brakeTorque = 0;
-                brakes.SetActive(false);
-            }
-
             if (axleInfo.steering)
             {
                 axleInfo.leftWheel.steerAngle = steering;
@@ -110,13 +94,10 @@ public class CarControllerWC : MonoBehaviour
 
             }
 
-            if (axleInfo.motor && Keyboard.current != null && Gamepad.current != null)
+            if (axleInfo.motor && Keyboard.current != null)
             {
                 axleInfo.leftWheel.motorTorque = forward;
                 axleInfo.rightWheel.motorTorque = forward;
-
-                axleInfo.leftWheel.motorTorque = gamepadControl;
-                axleInfo.rightWheel.motorTorque = gamepadControl;
             }
 
             if (axleInfo.leftWheel.isGrounded || axleInfo.rightWheel.isGrounded)
@@ -200,28 +181,6 @@ public class CarControllerWC : MonoBehaviour
             gearRatio = 30;
             maxTorque = -1150;
         }
-
-        if (Gamepad.current != null && Gamepad.current.aButton.wasPressedThisFrame && currentGear != 7)
-        {
-            gearRatio += 15;
-            maxRpm += 1500;
-            idle += 150;
-            maxTorque -= 150;
-            rb.drag = 0;
-            currentGear++;
-        }
-
-        if (Gamepad.current != null && Gamepad.current.xButton.wasPressedThisFrame && currentGear != -1)
-        {
-            gearRatio -= 15;
-            maxRpm -= 1500;
-            idle -= 150;
-            maxTorque += 150;
-            rb.drag = 0.5f;
-            currentGear--;
-        }
-
-
     }
 
     private void Update()
@@ -246,34 +205,6 @@ public class CarControllerWC : MonoBehaviour
             }
 
             if (Keyboard.current != null && Keyboard.current.upArrowKey.wasReleasedThisFrame)
-            {
-                maxSteeringAngle = 10;
-
-                WheelFrictionCurve grip;
-                grip = axleInfo.leftWheel.sidewaysFriction;
-                grip.extremumSlip = 0.2f;
-                axleInfo.leftWheel.sidewaysFriction = grip;
-
-                grip = axleInfo.rightWheel.sidewaysFriction;
-                grip.extremumSlip = 0.2f;
-                axleInfo.rightWheel.sidewaysFriction = grip;
-            }
-
-            if (Gamepad.current != null && Gamepad.current.bButton.wasPressedThisFrame)
-            {
-                maxSteeringAngle = 25;
-
-                WheelFrictionCurve grip;
-                grip = axleInfo.leftWheel.sidewaysFriction;
-                grip.extremumSlip = 0.8f;
-                axleInfo.leftWheel.sidewaysFriction = grip;
-
-                grip = axleInfo.rightWheel.sidewaysFriction;
-                grip.extremumSlip = 0.8f;
-                axleInfo.rightWheel.sidewaysFriction = grip;
-            }
-
-            if (Gamepad.current != null && Gamepad.current.rightTrigger.wasReleasedThisFrame)
             {
                 maxSteeringAngle = 10;
 
