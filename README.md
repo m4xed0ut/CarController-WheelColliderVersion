@@ -1,5 +1,5 @@
-# RidgeRacerStyle_CarController
-My own Wheel Collider-based Ridge Racer-style car controller script written in C# and Unity.
+# CarController-WheelColliderVersion
+My own Wheel Collider-based car controller script written in C# and Unity.
 
 This script also features an implementation of a manual gearbox. 
 
