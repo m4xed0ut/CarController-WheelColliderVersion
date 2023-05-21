@@ -86,6 +86,12 @@ public class CarControllerWC : MonoBehaviour
         foreach (AxleInfo axleInfo in axleInfos)
         {
 
+            if (engine.pitch == 2)
+            {
+                rb.drag = 1;
+            }
+
+
             if (axleInfo.steering)
             {
                 axleInfo.leftWheel.steerAngle = steering;
@@ -159,15 +165,6 @@ public class CarControllerWC : MonoBehaviour
             idle = 1150;
         }
 
-        if (engine.pitch == 2)
-        {
-            maxTorque = 0;
-        }
-        else
-        {
-            maxTorque = 1300;
-        }
-
         if (Keyboard.current != null && Keyboard.current.aKey.wasPressedThisFrame && engine.pitch >= 1.6f && currentGear != 6)
         {
             exhaust.PlayOneShot(pop, 0.5f);
@@ -177,11 +174,13 @@ public class CarControllerWC : MonoBehaviour
         if (Keyboard.current != null && Keyboard.current.aKey.wasPressedThisFrame && currentGear != 6)
         {
             currentGear++;
+            rb.drag = 0;
         }
 
         if (Keyboard.current != null && Keyboard.current.zKey.wasPressedThisFrame && currentGear != -1)
         {
             currentGear--;
+            rb.drag = 0;
         }
 
         if (currentGear == 0)
@@ -190,7 +189,6 @@ public class CarControllerWC : MonoBehaviour
             maxTorque = 0;
             gears.text = "N";
         }
-
 
         if (currentGear >= 6)
         {
@@ -227,6 +225,7 @@ public class CarControllerWC : MonoBehaviour
         Gearbox();
         foreach (AxleInfo axleInfo in axleInfos)
         {
+
             if (Keyboard.current != null && Keyboard.current.downArrowKey.IsPressed(1))
             {
                 rb.drag = 1.5f;
