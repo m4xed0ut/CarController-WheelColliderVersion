@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-
+using UnityEngine.UI;
 
 [System.Serializable]
 public class AxleInfo
@@ -41,12 +41,15 @@ public class CarControllerWC : MonoBehaviour
     public float gearRatio = 30;
     public float maxRpm = 3000;
     public float idle = 400;
-    float currentGear = 1;
+    public float currentGear = 1;
 
     [Header("Raycast")]
     public LayerMask terrain;
     public Transform raycastTarget;
     public float raycastDistance = 1;
+
+    [Header("UI")]
+    public Text gears;
 
     void Start()
     {
@@ -114,13 +117,55 @@ public class CarControllerWC : MonoBehaviour
     {
         Debug.Log(currentGear);
 
-        if (engine.pitch == 2.0)
+        gears.text = currentGear.ToString();
+
+        if (currentGear == 2)
         {
-            rb.drag = 0.5f;
+            maxTorque = 1150;
+            gearRatio = 45;
+            maxRpm = 4500;
+            idle = 550;
+        }
+
+        if (currentGear == 3)
+        {
+            maxTorque = 1000;
+            gearRatio = 60;
+            maxRpm = 6000;
+            idle = 700;
+        }
+
+        if (currentGear == 4)
+        {
+            maxTorque = 850;
+            gearRatio = 75;
+            maxRpm = 7500;
+            idle = 850;
+        }
+
+        if (currentGear == 5)
+        {
+            maxTorque = 700;
+            gearRatio = 90;
+            maxRpm = 9000;
+            idle = 1000;
+        }
+
+        if (currentGear == 6)
+        {
+            maxTorque = 550;
+            gearRatio = 105;
+            maxRpm = 10500;
+            idle = 1150;
+        }
+
+        if (engine.pitch == 2)
+        {
+            maxTorque = 0;
         }
         else
         {
-            rb.drag = 0;
+            maxTorque = 1300;
         }
 
         if (Keyboard.current != null && Keyboard.current.aKey.wasPressedThisFrame && engine.pitch >= 1.6f && currentGear != 6)
@@ -131,21 +176,11 @@ public class CarControllerWC : MonoBehaviour
 
         if (Keyboard.current != null && Keyboard.current.aKey.wasPressedThisFrame && currentGear != 6)
         {
-            gearRatio += 15;
-            maxRpm += 1500;
-            idle += 150;
-            maxTorque -= 150;
-            rb.drag = 0;
             currentGear++;
         }
 
         if (Keyboard.current != null && Keyboard.current.zKey.wasPressedThisFrame && currentGear != -1)
         {
-            gearRatio -= 15;
-            maxRpm -= 1500;
-            idle -= 150;
-            maxTorque += 150;
-            rb.drag = 0.5f;
             currentGear--;
         }
 
@@ -153,6 +188,7 @@ public class CarControllerWC : MonoBehaviour
         {
             reverseLight.SetActive(false);
             maxTorque = 0;
+            gears.text = "N";
         }
 
 
@@ -182,6 +218,7 @@ public class CarControllerWC : MonoBehaviour
             idle = 400;
             gearRatio = 30;
             maxTorque = -1300;
+            gears.text = "R";
         }
     }
 
@@ -190,10 +227,9 @@ public class CarControllerWC : MonoBehaviour
         Gearbox();
         foreach (AxleInfo axleInfo in axleInfos)
         {
-
             if (Keyboard.current != null && Keyboard.current.downArrowKey.IsPressed(1))
             {
-                rb.drag = 1;
+                rb.drag = 1.5f;
                 brakes.SetActive(true);
             }
             else
@@ -214,7 +250,7 @@ public class CarControllerWC : MonoBehaviour
                 grip.extremumSlip = 1.5f;
                 axleInfo.rightWheel.sidewaysFriction = grip;
 
-                if (Keyboard.current != null && Keyboard.current.upArrowKey.IsPressed(1))
+                if (rb.velocity.sqrMagnitude >= 2)
                 {
                     snow.SetActive(true);
                 }
