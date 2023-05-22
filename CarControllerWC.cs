@@ -274,10 +274,6 @@ public class CarControllerWC : MonoBehaviour
 
                 if (Keyboard.current != null && Keyboard.current.spaceKey.IsPressed(1))
                 {
-
-                    axleInfo.leftWheel.brakeTorque = 1000;
-                    axleInfo.rightWheel.brakeTorque = 1000;
-
                     grip = axleInfo.leftWheel.sidewaysFriction;
                     grip.extremumSlip = 0.8f;
                     axleInfo.leftWheel.sidewaysFriction = grip;
@@ -288,10 +284,6 @@ public class CarControllerWC : MonoBehaviour
                 }
                 else
                 {
-
-                    axleInfo.leftWheel.brakeTorque = 0;
-                    axleInfo.rightWheel.brakeTorque = 0;
-
                     grip = axleInfo.leftWheel.sidewaysFriction;
                     grip.extremumSlip = 0.2f;
                     axleInfo.leftWheel.sidewaysFriction = grip;
