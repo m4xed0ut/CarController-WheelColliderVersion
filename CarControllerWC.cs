@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
 
 [System.Serializable]
 public class AxleInfo
@@ -32,9 +31,8 @@ public class CarControllerWC : MonoBehaviour
     public GameObject smoke;
     public GameObject reverseLight;
     public AudioSource engine;
-    AudioSource exhaust;
-    public AudioClip pop;
     public GameObject snow;
+    public GameObject tireScreech;
 
     [Header("Engine Settings")]
     public float maxTorque;
@@ -42,21 +40,18 @@ public class CarControllerWC : MonoBehaviour
     public float maxRpm = 3000;
     public float idle = 400;
     public float currentGear = 1;
+    bool moving = false;
+    bool reverse = false;
 
     [Header("Raycast")]
     public LayerMask terrain;
     public Transform raycastTarget;
     public float raycastDistance = 1;
 
-    [Header("UI")]
-    public Text gears;
-
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         rb.centerOfMass = com;
-
-        exhaust = GetComponent<AudioSource>();
     }
 
     public void ApplyLocalPositionToVisuals(WheelCollider collider)
@@ -81,12 +76,19 @@ public class CarControllerWC : MonoBehaviour
 
         float steering = maxSteeringAngle * Input.GetAxis("Horizontal");
 
-        engine.pitch = Mathf.Clamp(rb.velocity.sqrMagnitude, idle, maxRpm) * Time.deltaTime / gearRatio;
-
         foreach (AxleInfo axleInfo in axleInfos)
         {
+            if (moving)
+            {
+                engine.pitch = Mathf.Clamp(rb.velocity.sqrMagnitude, idle, maxRpm) * Time.deltaTime / gearRatio;
+            }
 
-            if (engine.pitch == 2)
+            if (reverse)
+            {
+                engine.pitch = Mathf.Clamp(rb.velocity.sqrMagnitude, idle, maxRpm) * Time.deltaTime / gearRatio;
+            }
+
+            if (engine.pitch == 2 && axleInfo.leftWheel.isGrounded)
             {
                 rb.drag = 1;
             }
@@ -110,8 +112,9 @@ public class CarControllerWC : MonoBehaviour
             }
             else
             {
-                rb.AddForce(Vector3.down * 800 * 10);
+                rb.AddForce(Vector3.down * 600 * 10);
                 smoke.SetActive(false);
+                engine.pitch = Mathf.Clamp(axleInfo.leftWheel.rpm + axleInfo.rightWheel.rpm, idle, maxRpm) * Time.deltaTime / gearRatio;
             }
 
             ApplyLocalPositionToVisuals(axleInfo.leftWheel);
@@ -121,9 +124,36 @@ public class CarControllerWC : MonoBehaviour
 
     void Gearbox()
     {
-        Debug.Log(currentGear);
 
-        gears.text = currentGear.ToString();
+        // gearbox logic
+        if (currentGear == -1)
+        {
+            reverseLight.SetActive(true);
+            maxRpm = 3000;
+            idle = 400;
+            gearRatio = 30;
+            maxTorque = -1300;
+            reverse = true;
+        }
+
+        if (currentGear == 0)
+        {
+            reverse = false;
+            reverseLight.SetActive(false);
+            maxTorque = 0;
+            moving = false;
+
+            engine.pitch = Mathf.Lerp(idle, maxRpm, Input.GetAxis("Vertical")) / 1500;
+        }
+
+        if (currentGear == 1)
+        {
+            moving = true;
+            maxRpm = 3000;
+            idle = 400;
+            gearRatio = 30;
+            maxTorque = 1300;
+        }
 
         if (currentGear == 2)
         {
@@ -157,25 +187,66 @@ public class CarControllerWC : MonoBehaviour
             idle = 1000;
         }
 
-        if (currentGear == 6)
+        if (moving)
         {
-            maxTorque = 550;
-            gearRatio = 105;
-            maxRpm = 10500;
-            idle = 1150;
+            // automatic gearbox
+
+            // 2nd gear
+
+            if (rb.velocity.magnitude <= 54 && engine.pitch >= 1.6f)
+            {
+                currentGear = 2;
+            }
+
+            if (rb.velocity.magnitude <= 52 && rb.velocity.magnitude >= 0)
+            {
+                currentGear = 1;
+            }
+
+            // 3rd gear
+
+            if (rb.velocity.magnitude >= 65)
+            {
+                currentGear = 3;
+            }
+
+            if (rb.velocity.magnitude <= 65 && rb.velocity.magnitude >= 63)
+            {
+                currentGear = 2;
+            }
+
+            // 4th gear
+
+            if (rb.velocity.magnitude >= 75)
+            {
+                currentGear = 4;
+            }
+
+            if (rb.velocity.magnitude <= 75 && rb.velocity.magnitude >= 73)
+            {
+                currentGear = 3;
+            }
+
+            // 5th gear
+
+            if (rb.velocity.magnitude >= 84)
+            {
+                currentGear = 5;
+            }
+
+            if (rb.velocity.magnitude <= 84 && rb.velocity.magnitude >= 82)
+            {
+                currentGear = 4;
+            }
         }
 
-        if (Keyboard.current != null && Keyboard.current.aKey.wasPressedThisFrame && engine.pitch >= 1.6f && currentGear != 6)
-        {
-            exhaust.PlayOneShot(pop, 0.5f);
-        }
-
-
+        
         if (Keyboard.current != null && Keyboard.current.aKey.wasPressedThisFrame && currentGear != 6)
         {
             currentGear++;
             rb.drag = 0;
         }
+        
 
         if (Keyboard.current != null && Keyboard.current.zKey.wasPressedThisFrame && currentGear != -1)
         {
@@ -183,40 +254,14 @@ public class CarControllerWC : MonoBehaviour
             rb.drag = 0;
         }
 
-        if (currentGear == 0)
-        {
-            reverseLight.SetActive(false);
-            maxTorque = 0;
-            gears.text = "N";
-        }
-
         if (currentGear >= 6)
         {
             currentGear = 6;
         }
 
-
-        if (currentGear == 1)
-        {
-            maxRpm = 3000;
-            idle = 400;
-            gearRatio = 30;
-            maxTorque = 1300;
-        }
-
         if (currentGear <= -1)
         {
             currentGear = -1;
-        }
-
-        if (currentGear == -1)
-        {
-            reverseLight.SetActive(true);
-            maxRpm = 3000;
-            idle = 400;
-            gearRatio = 30;
-            maxTorque = -1300;
-            gears.text = "R";
         }
     }
 
@@ -225,8 +270,7 @@ public class CarControllerWC : MonoBehaviour
         Gearbox();
         foreach (AxleInfo axleInfo in axleInfos)
         {
-
-            if (Keyboard.current != null && Keyboard.current.downArrowKey.IsPressed(1))
+            if (Keyboard.current != null && Keyboard.current.downArrowKey.IsPressed(1) && axleInfo.leftWheel.isGrounded)
             {
                 rb.drag = 1.5f;
                 brakes.SetActive(true);
@@ -240,6 +284,7 @@ public class CarControllerWC : MonoBehaviour
             RaycastHit groundHit;
             if (Physics.Raycast(raycastTarget.position, -raycastTarget.up, out groundHit, raycastDistance, terrain))
             {
+                maxSteeringAngle = 30;
                 WheelFrictionCurve grip;
                 grip = axleInfo.leftWheel.sidewaysFriction;
                 grip.extremumSlip = 1.5f;
@@ -261,6 +306,7 @@ public class CarControllerWC : MonoBehaviour
             }
             else
             {
+                maxSteeringAngle = 15;
                 snow.SetActive(false);
                 WheelFrictionCurve grip;
                 grip = axleInfo.leftWheel.sidewaysFriction;
